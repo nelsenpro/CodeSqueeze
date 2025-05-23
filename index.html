@@ -1,0 +1,190 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Advanced Code Minifier</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/html-minifier-terser@6.1.0/dist/htmlminifier.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/csso@5.0.5/dist/csso.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/uglify-js@3.17.4/tools.min.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      background: #f0f2f5;
+      color: #333;
+      padding: 1rem;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    header h1 {
+      font-size: 2rem;
+      margin: 0.5rem 0;
+    }
+    .container {
+      max-width: 1000px;
+      margin: auto;
+      background: white;
+      padding: 1rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    select, button, input[type="file"] {
+      padding: 0.6rem;
+      margin: 0.5rem 0;
+      font-size: 1rem;
+    }
+    textarea {
+      width: 100%;
+      min-height: 180px;
+      margin: 1rem 0;
+      padding: 1rem;
+      font-family: monospace;
+      font-size: 1rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-right: 0.5rem;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .flex {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .half {
+      flex: 1;
+      min-width: 300px;
+    }
+    footer {
+      text-align: center;
+      margin-top: 2rem;
+      font-size: 0.9rem;
+    }
+    .dark-mode {
+      background-color: #181818;
+      color: #f1f1f1;
+    }
+    .dark-mode textarea {
+      background-color: #2b2b2b;
+      color: #f1f1f1;
+    }
+    .dark-toggle {
+      float: right;
+      margin-top: -40px;
+      margin-right: 1rem;
+    }
+    @media (max-width: 600px) {
+      header h1 { font-size: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <button class="dark-toggle" onclick="toggleDarkMode()"><i class="fas fa-moon"></i></button>
+    <h1><i class="fas fa-compress-alt"></i> Advanced HTML, CSS & JS Minifier</h1>
+    <p>Minify and optimize your code directly in your browser</p>
+  </header>  <div class="container">
+    <label for="type"><strong>Choose Code Type:</strong></label>
+    <select id="type" onchange="detectCodeType()">
+      <option value="html">HTML</option>
+      <option value="css">CSS</option>
+      <option value="js">JavaScript</option>
+    </select><div class="flex">
+  <div class="half">
+    <label for="input"><strong>Input Code:</strong></label>
+    <textarea id="input" placeholder="Paste your code here..." oninput="detectCodeType()"></textarea>
+    <input type="file" id="fileInput" accept=".html,.css,.js" onchange="loadFromFile(event)">
+  </div>
+  <div class="half">
+    <label for="output"><strong>Minified Code:</strong></label>
+    <textarea id="output" readonly></textarea>
+    <button onclick="downloadOutput()"><i class="fas fa-download"></i> Download</button>
+  </div>
+</div>
+
+<button onclick="minifyCode()"><i class="fas fa-magic"></i> Minify Code</button>
+<button onclick="copyOutput()"><i class="fas fa-copy"></i> Copy Output</button>
+
+  </div>  <footer>
+    &copy; 2025 MinifyTools - Built with HTMLMinifier, CSSO, and UglifyJS
+  </footer>  <script>
+    function toggleDarkMode() {
+      document.body.classList.toggle("dark-mode");
+    }
+
+    async function minifyCode() {
+      const type = document.getElementById('type').value;
+      const input = document.getElementById('input').value;
+      const output = document.getElementById('output');
+      try {
+        if (type === 'html') {
+          const minified = htmlMinifier.minify(input, {
+            collapseWhitespace: true,
+            removeComments: true,
+            minifyCSS: true,
+            minifyJS: true
+          });
+          output.value = minified;
+        } else if (type === 'css') {
+          const minified = csso.minify(input).css;
+          output.value = minified;
+        } else if (type === 'js') {
+          const result = UglifyJS.minify(input);
+          if (result.error) throw result.error;
+          output.value = result.code;
+        }
+      } catch (err) {
+        output.value = `Error: ${err.message}`;
+      }
+    }
+
+    function copyOutput() {
+      const output = document.getElementById('output');
+      output.select();
+      document.execCommand('copy');
+      alert('Minified code copied to clipboard!');
+    }
+
+    function downloadOutput() {
+      const blob = new Blob([document.getElementById('output').value], {type: 'text/plain'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = "minified-code.txt";
+      a.click();
+    }
+
+    function loadFromFile(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById('input').value = e.target.result;
+        detectCodeType();
+      };
+      reader.readAsText(file);
+    }
+
+    function detectCodeType() {
+      const code = document.getElementById('input').value;
+      if (code.includes("<html") || code.includes("<!DOCTYPE")) {
+        document.getElementById('type').value = 'html';
+      } else if (code.includes("{") && code.includes("}") && !code.includes("function")) {
+        document.getElementById('type').value = 'css';
+      } else if (code.includes("function") || code.includes("var") || code.includes("let") || code.includes("const")) {
+        document.getElementById('type').value = 'js';
+      }
+    }
+  </script></body>
+  </html>
